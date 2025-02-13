@@ -1,3 +1,5 @@
+from collections.abc import Hashable
+
 from main.sorted_frozen_set import SortedFrozenSet
 
 
@@ -6,3 +8,6 @@ def test_equel_sets_have_the_Same_hash_code():
     s2 = SortedFrozenSet([5, 2, 1, 4])
 
     assert hash(s1) == hash(s2)
+
+def test_hashable_protocol():
+    assert issubclass(SortedFrozenSet, Hashable)

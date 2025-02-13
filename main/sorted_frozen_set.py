@@ -1,15 +1,21 @@
-from collections.abc import Iterable, Hashable, Iterator
+from bisect import bisect_left
+from collections.abc import Iterable, Hashable, Iterator, Sequence, Set
+from itertools import chain
 from typing import Any
 
 from main.sorted_frozen_set_dtypes import SupportsRichComparisonT, SupportsRichComparison
 
 
-class SortedFrozenSet:
+class SortedFrozenSet(Sequence, Set):
     def __init__(self, items: Iterable[SupportsRichComparisonT] | None = None) -> None:
         self._items: tuple[SupportsRichComparisonT, ...] = tuple(sorted(set(items)) if items is not None else set())
 
     def __contains__(self, item: Hashable) -> bool:
-        return item in self._items
+        try:
+            self.index(item)
+            return True
+        except ValueError:
+            return False
 
     def __len__(self) -> int:
         return len(self._items)
@@ -18,7 +24,7 @@ class SortedFrozenSet:
         return iter(self._items)
         # for item in self._items:
         #     yield item
-    def __getitem__(self, index: int | slice) -> SupportsRichComparison | "SortedFrozenSet":
+    def __getitem__(self, index: int | slice) -> Any:
         items: SupportsRichComparison | tuple[SupportsRichComparison] = self._items[index]
 
         if isinstance(index, slice) and isinstance(items, tuple):
@@ -36,3 +42,48 @@ class SortedFrozenSet:
 
     def __hash__(self) -> int:
         return hash(self._items)
+
+    def __add__(self, other: Any) ->'SortedFrozenSet':
+        if not isinstance(other, type(self)):
+            return NotImplemented
+
+        return SortedFrozenSet(chain(self._items, other._items))
+
+    def __mul__(self, other: int)->'SortedFrozenSet':
+        return self if other > 0 else SortedFrozenSet()
+
+    def __rmul__(self, other: int) -> 'SortedFrozenSet':
+        return self * other
+
+    def count(self, item):
+        return int(item in self)
+
+    def index(self, item: Any, start: int=0, stop: int=...):
+        index = bisect_left(self._items, item)
+        if (index != len(self._items)) and self._items[index] == item:
+            return index
+        raise ValueError(f'{item!r} not found')
+
+    def issubset(self, other: Iterable) -> bool:
+        return self <= SortedFrozenSet(other)
+
+    def issuperset(self, other: Iterable) -> bool:
+        return self >= SortedFrozenSet(other)
+
+    def intersection(self, other: Iterable)->'SortedFrozenSet':
+        return self & SortedFrozenSet(other)
+
+    def union(self, other: Iterable)->'SortedFrozenSet':
+        return self | SortedFrozenSet(other)
+
+    def symmetric_difference(self, other: Iterable)->'SortedFrozenSet':
+        return self ^ SortedFrozenSet(other)
+
+    def difference(self, other: Iterable)->'SortedFrozenSet':
+        return self - SortedFrozenSet(other)
+
+
+    # def index(self, item:SupportsRichComparisonT) ->int:
+    #     for index, element in enumerate(self._items):
+    #         if element == item:
+    #             return index

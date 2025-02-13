@@ -1,3 +1,5 @@
+from collections.abc import Iterable
+
 import pytest
 
 from main.sorted_frozen_set import SortedFrozenSet
@@ -22,3 +24,6 @@ def test_for_loop(sorted_frozen_set_duplicates):
     expected = [1, 2, 7, 9]
     for idx, item in enumerate(sorted_frozen_set_duplicates):
         assert item == expected[idx]
+
+def test_iterable_protocol():
+    assert issubclass(SortedFrozenSet, Iterable)
